@@ -114,28 +114,3 @@ CARTA RECIBIDA (como JSON bruto de la API):
         print("ERROR: Ollama no devolvió JSON válido al analizar carta")
         print(respuesta)
         return {"tipo": "otro", "oferta": {}, "pide": {}, "recursos_recibidos": {}}
-
-
-def generar_plan(info: Dict[str, Any], people: list, cartas_recibidas: list) -> Dict[str, Any] | None:
-    """
-    Función legacy: genera un plan (acciones + análisis) con Ollama.
-    Se deja por compatibilidad o reutilización del prompt.
-    """
-    prompt = f"""
-NUESTROS RECURSOS:
-{json.dumps(info, indent=2)}
-
-AGENTES DISPONIBLES:
-{json.dumps(people, indent=2)}
-
-CARTAS RECIBIDAS:
-{json.dumps(cartas_recibidas, indent=2)}
-""" + PROMPT_BASE
-
-    respuesta = ollama(prompt)
-    try:
-        return json.loads(respuesta)
-    except json.JSONDecodeError:
-        print("ERROR: Ollama no devolvió JSON válido")
-        print(respuesta)
-        return None

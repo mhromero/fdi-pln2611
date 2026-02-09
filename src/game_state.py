@@ -1,60 +1,154 @@
 """
-Utilidades sobre el estado del juego: inventario, objetivo, necesidades y excedentes.
+Estado del juego: clase State con alias, inventario, objetivo, necesidades,
+excedentes y buzón. Incluye la lógica de extracción y comprobación de objetivo.
 """
 
+from dataclasses import dataclass
 from typing import Any, Dict, Tuple
+
+from . import api
 from .config import GOLD_RESOURCE_NAME
 
 
+@dataclass
+class State:
+    """
+    Representa nuestro estado en la partida:
+    - alias: quiénes somos
+    - inventario: recursos que tenemos
+    - objetivo: recursos que queremos conseguir
+    - needs: lo que nos falta para el objetivo
+    - surplus: lo que nos sobra y podemos ofrecer
+    - buzon: cartas recibidas (id -> contenido)
+    """
+
+    alias: str
+    inventario: Dict[str, int]
+    objetivo: Dict[str, int]
+    needs: Dict[str, int]
+    surplus: Dict[str, int]
+    buzon: Dict[str, Any]
+
+    @classmethod
+    def from_info(cls, info: Dict[str, Any]) -> "State":
+        """
+        Construye un State a partir de la respuesta de /info.
+        Incluye alias, inventario, objetivo y buzón; calcula needs y surplus.
+        """
+        raw_alias = info.get("Alias") or info.get("alias")
+        if not raw_alias:
+            raise ValueError("No se ha encontrado el alias en la respuesta de /info")
+        alias = raw_alias[0] if isinstance(raw_alias, list) else raw_alias
+
+        raw_recursos = info.get("Recursos") or {}
+        raw_objetivo = info.get("Objetivo") or {}
+        inventario = {k: int(v) for k, v in raw_recursos.items()}
+        objetivo = {k: int(v) for k, v in raw_objetivo.items()}
+        buzon = info.get("Buzon") or {}
+
+        needs, surplus = cls._compute_needs_and_surplus(inventario, objetivo)
+        return cls(
+            alias=alias,
+            inventario=inventario,
+            objetivo=objetivo,
+            needs=needs,
+            surplus=surplus,
+            buzon=buzon,
+        )
+
+    @staticmethod
+    def _compute_needs_and_surplus(
+        inventario: Dict[str, int], objetivo: Dict[str, int]
+    ) -> Tuple[Dict[str, int], Dict[str, int]]:
+        """
+        Calcula needs (lo que nos falta) y surplus (lo que nos sobra).
+        El oro se excluye del surplus.
+        """
+        needs: Dict[str, int] = {}
+        surplus: Dict[str, int] = {}
+
+        for recurso, objetivo_cant in objetivo.items():
+            actual = inventario.get(recurso, 0)
+            if objetivo_cant > actual:
+                needs[recurso] = objetivo_cant - actual
+            elif actual > objetivo_cant:
+                surplus[recurso] = actual - objetivo_cant
+
+        for recurso, actual in inventario.items():
+            if recurso not in objetivo and actual > 0:
+                surplus[recurso] = surplus.get(recurso, 0) + actual
+
+        surplus = {k: v for k, v in surplus.items() if k != GOLD_RESOURCE_NAME}
+        return needs, surplus
+
+    def update(self) -> None:
+        """
+        Actualiza el estado completo llamando a la API /info y refrescando
+        alias, inventario, objetivo, buzón, needs y surplus.
+        """
+        info = api.get_info()
+        raw_alias = info.get("Alias") or info.get("alias")
+        if not raw_alias:
+            raise ValueError("No se ha encontrado el alias en la respuesta de /info")
+        alias = raw_alias[0] if isinstance(raw_alias, list) else raw_alias
+
+        raw_recursos = info.get("Recursos") or {}
+        raw_objetivo = info.get("Objetivo") or {}
+        self.alias = alias
+        self.inventario = {k: int(v) for k, v in raw_recursos.items()}
+        self.objetivo = {k: int(v) for k, v in raw_objetivo.items()}
+        self.buzon = info.get("Buzon") or {}
+        self.recompute()
+
+    def recompute(self) -> None:
+        """
+        Recalcula needs y surplus a partir del inventario y el objetivo actuales.
+        """
+        self.needs, self.surplus = self._compute_needs_and_surplus(
+            self.inventario, self.objetivo
+        )
+
+    def has_reached_objective(self) -> bool:
+        """
+        Comprueba si ya hemos alcanzado el objetivo de recursos.
+        """
+        for recurso, objetivo_cant in self.objetivo.items():
+            if self.inventario.get(recurso, 0) < objetivo_cant:
+                return False
+        return True
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Exporta el estado a un diccionario (alias, inventario, objetivo, needs, surplus, buzon).
+        """
+        return {
+            "alias": self.alias,
+            "inventario": self.inventario,
+            "objetivo": self.objetivo,
+            "needs": self.needs,
+            "surplus": self.surplus,
+            "buzon": self.buzon,
+        }
+
+
+# Compatibilidad con código que use las funciones sueltas
 def extract_game_state(info: Dict[str, Any]) -> Tuple[str, Dict[str, int], Dict[str, int]]:
-    """
-    Extrae alias, inventario y recursos objetivo desde la respuesta de /info.
-    Intenta ser robusto ante distintas claves.
-    """
-    alias = info.get("Alias") or info.get("alias")
-    if not alias:
-        raise ValueError("No se ha encontrado el alias en la respuesta de /info")
-
-    inventario = (info.get("Recursos"))
-    objetivo = (info.get("Objetivo"))
-
-    return (
-        alias,
-        {k: int(v) for k, v in inventario.items()},
-        {k: int(v) for k, v in objetivo.items()},
-    )
+    """Extrae alias, inventario y objetivo desde /info. Preferir State.from_info()."""
+    s = State.from_info(info)
+    return s.alias, s.inventario, s.objetivo
 
 
 def compute_needs_and_surplus(
     inventario: Dict[str, int], objetivo: Dict[str, int]
 ) -> Tuple[Dict[str, int], Dict[str, int]]:
-    """
-    Calcula:
-    - needs: recursos que nos faltan para el objetivo.
-    - surplus: recursos que nos sobran (incluidos los que no están en el objetivo).
-    """
-    needs: Dict[str, int] = {}
-    surplus: Dict[str, int] = {}
-
-    for recurso, objetivo_cant in objetivo.items():
-        actual = inventario.get(recurso, 0)
-        if objetivo_cant > actual:
-            needs[recurso] = objetivo_cant - actual
-        elif actual > objetivo_cant:
-            surplus[recurso] = actual - objetivo_cant
-
-    for recurso, actual in inventario.items():
-        if recurso not in objetivo and actual > 0:
-            surplus[recurso] = surplus.get(recurso, 0) + actual
-    
-    surplus = {k: v for k, v in surplus.items() if k != GOLD_RESOURCE_NAME} # quitamos el oro
-
-    return needs, surplus
+    """Calcula needs y surplus. Preferir State.recompute() o State.from_info()."""
+    return State._compute_needs_and_surplus(inventario, objetivo)
 
 
 def has_reached_objective(
     inventario: Dict[str, int], objetivo: Dict[str, int]
 ) -> bool:
+    """Comprueba si el inventario cumple el objetivo. Preferir state.has_reached_objective()."""
     for recurso, objetivo_cant in objetivo.items():
         if inventario.get(recurso, 0) < objetivo_cant:
             return False
