@@ -52,6 +52,13 @@ def get_mailbox() -> Any:
     return r.json()
 
 
+def delete_letter(uid: str) -> Any:
+    """Elimina una carta del buzón (DELETE /mail/{uid})."""
+    r = requests.delete(f"{API_BASE}/mail/{uid}")
+    r.raise_for_status()
+    return r.json()
+
+
 def send_package(to_alias: str, resources: Dict[str, int]) -> Any:
     """Envía un paquete de recursos a otro agente."""
     payload = {
