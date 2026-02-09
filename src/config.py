@@ -2,7 +2,7 @@
 Configuración del bot: API, Ollama, endpoints y prompts.
 """
 
-API_BASE = "http://147.96.81.252:7719"
+API_BASE = "http://127.0.0.1:7719"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "qwen3-vl:8b"
 
@@ -11,7 +11,6 @@ MAILBOX_ENDPOINT = f"{API_BASE}/buzon"
 LETTER_ENDPOINT = f"{API_BASE}/carta"
 PACKAGE_ENDPOINT = f"{API_BASE}/paquete"
 
-DEBT_FILE = "deudas.json"
 GOLD_RESOURCE_NAME = "oro"
 
 PROMPT_BASE = """

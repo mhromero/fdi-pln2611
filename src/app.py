@@ -6,7 +6,6 @@ import json
 from typing import Any, Dict
 
 from . import api
-from . import debts
 from .config import GOLD_RESOURCE_NAME
 from .game_state import (
     compute_needs_and_surplus,
@@ -153,11 +152,6 @@ def main() -> None:
             try:
                 print(f"Aceptando oferta de {remitente}. Enviando paquete: {pide}")
                 api.send_package(remitente, {k: int(v) for k, v in pide.items()})
-                debts.record_debt(
-                    remitente,
-                    {k: int(v) for k, v in pide.items()},
-                    {k: int(v) for k, v in oferta.items()},
-                )
                 recursos_cambiaron = True
             except Exception as e:
                 print(f"ERROR enviando paquete de oferta a {remitente}: {e}")
@@ -183,12 +177,6 @@ def main() -> None:
 
             if not incremento_valido:
                 print("No se detecta claramente el incremento de recursos indicado, no hacemos nada.")
-                continue
-
-            if remitente in debts.load_debts():
-                print(f"{remitente} ha devuelto su deuda. Eliminando del JSON de deudas.")
-                debts.clear_debts_for(remitente)
-                recursos_cambiaron = True
                 continue
 
             if not pide:
