@@ -6,14 +6,36 @@ from .config import GOLD_RESOURCE_NAME
 from .letters import build_trade_confirmation_letter
 from .ollama_client import ollama
 
+# JSON Schema para forzar la forma de la decisión de oferta (Ollama format).
+ANALIZAR_OFERTA_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "decision": {
+            "type": "string",
+            "enum": ["aceptada", "rechazada"],
+        },
+        "oferta": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+        },
+        "pide": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+        },
+    },
+    "required": ["decision", "oferta", "pide"],
+    "additionalProperties": False,
+}
+
+
 def analizar_oferta(
     oferta: Dict[str, Any],
     needs: Dict[str, Any],
     surplus: Dict[str, int],
 ) -> Dict[str, Any]:
     """
-    Usa Ollama para interpretar una carta y devolver un JSON con
-    tipo (oferta|confirmacion|otro), oferta, pide, recursos_recibidos.
+    Usa Ollama para decidir si aceptar o rechazar una oferta.
+    Devuelve un JSON con decision (aceptada|rechazada), oferta y pide.
     """
     prompt = f"""
 Eres un asistente que toma decisiones sobre ofertas recibidas.
@@ -55,18 +77,16 @@ OFERTA A ANALIZAR:
 
 
 """
-    
-    respuesta = ollama(prompt)
-    
+    respuesta = ollama(prompt, format=ANALIZAR_OFERTA_JSON_SCHEMA)
     try:
         data = json.loads(respuesta)
         if not isinstance(data, dict):
             raise ValueError("Respuesta no es un dict")
         return data
     except (json.JSONDecodeError, ValueError):
-        print("ERROR: Ollama no devolvió JSON válido al analizar carta")
+        print("ERROR: Ollama no devolvió JSON válido al analizar oferta")
         print(respuesta)
-        return {"tipo": "otro", "oferta": {}, "pide": {}, "recursos_recibidos": {}}
+        return {"decision": "rechazada", "oferta": {}, "pide": {}}
 
 
 def process_offer(
@@ -358,28 +378,3 @@ def handle_confirmation(
         print(f"ERROR enviando carta de confirmación (confirmación recibida) a {remitente}: {e}")
 
     return True
-
-
-def generar_plan(info: Dict[str, Any], people: list, cartas_recibidas: list) -> Dict[str, Any] | None:
-    """
-    Función legacy: genera un plan (acciones + análisis) con Ollama.
-    Se deja por compatibilidad o reutilización del prompt.
-    """
-    prompt = f"""
-NUESTROS RECURSOS:
-{json.dumps(info, indent=2)}
-
-AGENTES DISPONIBLES:
-{json.dumps(people, indent=2)}
-
-CARTAS RECIBIDAS:
-{json.dumps(cartas_recibidas, indent=2)}
-"""
-
-    respuesta = ollama(prompt)
-    try:
-        return json.loads(respuesta)
-    except json.JSONDecodeError:
-        print("ERROR: Ollama no devolvió JSON válido")
-        print(respuesta)
-        return None

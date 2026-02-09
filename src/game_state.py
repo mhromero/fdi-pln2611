@@ -129,27 +129,3 @@ class State:
             "surplus": self.surplus,
             "buzon": self.buzon,
         }
-
-
-# Compatibilidad con código que use las funciones sueltas
-def extract_game_state(info: Dict[str, Any]) -> Tuple[str, Dict[str, int], Dict[str, int]]:
-    """Extrae alias, inventario y objetivo desde /info. Preferir State.from_info()."""
-    s = State.from_info(info)
-    return s.alias, s.inventario, s.objetivo
-
-
-def compute_needs_and_surplus(
-    inventario: Dict[str, int], objetivo: Dict[str, int]
-) -> Tuple[Dict[str, int], Dict[str, int]]:
-    """Calcula needs y surplus. Preferir State.recompute() o State.from_info()."""
-    return State._compute_needs_and_surplus(inventario, objetivo)
-
-
-def has_reached_objective(
-    inventario: Dict[str, int], objetivo: Dict[str, int]
-) -> bool:
-    """Comprueba si el inventario cumple el objetivo. Preferir state.has_reached_objective()."""
-    for recurso, objetivo_cant in objetivo.items():
-        if inventario.get(recurso, 0) < objetivo_cant:
-            return False
-    return True

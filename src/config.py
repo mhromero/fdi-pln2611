@@ -22,3 +22,4 @@ GOLD_RESOURCE_NAME = _c["gold_resource_name"]
 MAILBOX_ENDPOINT = API_BASE + _c["mailbox_endpoint"]
 LETTER_ENDPOINT = API_BASE + _c["letter_endpoint"]
 PACKAGE_ENDPOINT = API_BASE + _c["package_endpoint"]
+ALIAS = _c.get("alias", "")

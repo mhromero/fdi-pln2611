@@ -8,6 +8,31 @@ from typing import Any, Dict
 from .config import GOLD_RESOURCE_NAME
 from .ollama_client import ollama
 
+# JSON Schema para forzar la forma del análisis de cartas (Ollama format).
+ANALIZAR_CARTA_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "tipo": {
+            "type": "string",
+            "enum": ["oferta", "confirmacion", "otro"],
+        },
+        "oferta": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+        },
+        "pide": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+        },
+        "recursos_recibidos": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0},
+        },
+    },
+    "required": ["tipo", "oferta", "pide", "recursos_recibidos"],
+    "additionalProperties": False,
+}
+
 
 def build_status_letter(
     alias: str,
@@ -102,8 +127,7 @@ NECESITAMOS:
 CARTA RECIBIDA (como JSON bruto de la API):
 {json.dumps(carta_dict, ensure_ascii=False, indent=2)}
 """
-    
-    respuesta = ollama(prompt)
+    respuesta = ollama(prompt, format=ANALIZAR_CARTA_JSON_SCHEMA)
     
     try:
         data = json.loads(respuesta)

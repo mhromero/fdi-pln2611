@@ -25,6 +25,13 @@ def get_people() -> Any:
     return r.json()
 
 
+def set_alias(nombre: str) -> Any:
+    """Configura nuestro alias en el servidor (POST /alias/{nombre})."""
+    r = requests.post(f"{API_BASE}/alias/{nombre}")
+    r.raise_for_status()
+    return r.json()
+
+
 def remove_myself(info: Dict[str, Any], people: list) -> list:
     """
     Devuelve la lista de agentes sin incluirnos a nosotros mismos.

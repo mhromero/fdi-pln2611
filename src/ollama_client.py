@@ -1,21 +1,32 @@
 """
 Cliente para Ollama (generación con LLM local).
+Soporta JSON Schema en `format` para forzar salida estructurada.
 """
+
+from typing import Any, Dict, Optional
 
 import requests
 
 from .config import MODEL
 
 
-def ollama(prompt: str) -> str:
+def ollama(prompt: str, format: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Llama al modelo Ollama. Si se pasa `format` (JSON Schema), la respuesta
+    se fuerza a cumplir ese esquema (JSON Schema–guided generation).
+    """
+    payload: Dict[str, Any] = {
+        "model": MODEL,
+        "prompt": prompt,
+        "stream": False,
+    }
+    if format is not None:
+        payload["format"] = format
+
     try:
         r = requests.post(
             "http://localhost:11434/api/generate",
-            json={
-                "model": MODEL,
-                "prompt": prompt,
-                "stream": False,
-            },
+            json=payload,
             timeout=180,
         )
         r.raise_for_status()

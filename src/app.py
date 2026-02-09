@@ -6,6 +6,7 @@ import json
 import time
 
 from . import api
+from .config import ALIAS
 from .game_state import State
 from .letters import (
     analizar_carta,
@@ -35,6 +36,15 @@ def main() -> None:
     4) Si cambian nuestros recursos, reenviar carta de estado actualizada.
     """
     print_section("INICIO DEL BOT")
+
+    # Configuramos nuestro alias según la configuración (doc: POST /alias/{nombre})
+    if ALIAS:
+        try:
+            print_kv("Alias configurado", ALIAS)
+            api.set_alias(ALIAS)
+        except Exception as e:
+            print_error(f"No se pudo configurar el alias '{ALIAS}': {e}")
+
     print_kv("Acción", "Obteniendo nuestros recursos (/info)")
 
     state = State(alias="", inventario={}, objetivo={}, needs={}, surplus={}, buzon={})
