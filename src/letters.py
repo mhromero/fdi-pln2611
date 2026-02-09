@@ -34,6 +34,25 @@ Si te interesa intercambiar, por favor propón un trato indicando:
 """.strip()
 
 
+def build_trade_confirmation_letter(
+    recursos_enviados: Dict[str, int],
+    recursos_esperados: Dict[str, int],
+) -> str:
+    """
+    Carta prefabricada para confirmar que hemos aceptado una oferta:
+    indicamos qué recursos hemos enviado y cuáles esperamos recibir.
+    """
+    return f"""
+He aceptado tu oferta.
+
+Te he enviado los recursos que pedías:
+{json.dumps(recursos_enviados, ensure_ascii=False, indent=2)}
+
+Espero recibir a cambio los recursos que ofrecías:
+{json.dumps(recursos_esperados, ensure_ascii=False, indent=2)}
+""".strip()
+
+
 def analizar_carta(
     carta_dict: Dict[str, Any],
     needs: Dict[str, Any],
