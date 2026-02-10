@@ -59,6 +59,23 @@ Si te interesa intercambiar, por favor propón un trato indicando:
 """.strip()
 
 
+def build_simple_offer_letter(
+    recurso_necesario: str,
+    recurso_sobrante: str,
+) -> str:
+    """
+    Genera una 'mini carta' muy simple proponiendo un intercambio 1 a 1:
+    queremos 1 unidad de `recurso_necesario` y ofrecemos 1 unidad de
+    `recurso_sobrante` a cambio.
+
+    Ejemplo: "Te propongo intercambiar 1 piedra por 1 tela."
+    """
+    return (
+        f"Te propongo intercambiar 1 {recurso_necesario} que necesito "
+        f"por 1 {recurso_sobrante} que te ofrezco."
+    )
+
+
 def build_trade_confirmation_letter(
     recursos_enviados: Dict[str, int],
     recursos_esperados: Dict[str, int],
