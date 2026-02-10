@@ -84,11 +84,20 @@ def delete_letter(uid: str) -> Any:
 
 
 def send_package(to_alias: str, resources: Dict[str, int]) -> Any:
-    """Envía un paquete de recursos a otro agente."""
-    payload = {
-        "alias": to_alias,
-        "recursos": resources,
-    }
-    r = requests.post(PACKAGE_ENDPOINT, json=payload)
+    """
+    Envía un paquete de recursos a otro agente siguiendo la sintaxis
+    documentada para POST /paquete/{dest}.
+
+    Ejemplo de llamada resultante:
+      POST /paquete/{dest}
+      cuerpo JSON:
+      {
+        "madera": 4,
+        "oro": 2
+      }
+    """
+    # La API espera el alias del destinatario en el path y directamente
+    # un objeto con los recursos en el cuerpo.
+    r = requests.post(f"{PACKAGE_ENDPOINT}/{to_alias}", json=resources)
     r.raise_for_status()
     return r.json()
