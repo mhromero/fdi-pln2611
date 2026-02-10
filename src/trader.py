@@ -324,7 +324,7 @@ def handle_offer(
             recursos_esperados=oferta,
         )
         print(f"→ Enviando carta de confirmación de oferta aceptada a {remitente}...")
-        api.send_letter(remitente, carta_confirmacion)
+        api.send_letter(remitente, "Confirmación de oferta aceptada", carta_confirmacion)
     except Exception as e:
         print(f"ERROR enviando carta de confirmación a {remitente}: {e}")
 
@@ -373,7 +373,7 @@ def handle_confirmation(
             recursos_esperados=recursos_recibidos,
         )
         print(f"→ Enviando carta de confirmación de envío de recursos a {remitente}...")
-        api.send_letter(remitente, carta_confirmacion)
+        api.send_letter(remitente, "Confirmación de envío de recursos", carta_confirmacion)
     except Exception as e:
         print(f"ERROR enviando carta de confirmación (confirmación recibida) a {remitente}: {e}")
 

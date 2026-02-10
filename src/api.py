@@ -3,13 +3,16 @@ Llamadas a la API externa: info, gente, cartas y paquetes.
 """
 
 import requests
+from datetime import datetime
 from typing import Any, Dict
+from uuid import uuid4
 
 from .config import (
     API_BASE,
     LETTER_ENDPOINT,
     MAILBOX_ENDPOINT,
     PACKAGE_ENDPOINT,
+    ALIAS,
 )
 
 
@@ -41,11 +44,25 @@ def remove_myself(info: Dict[str, Any], people: list) -> list:
     return [p for p in people if p != myself]
 
 
-def send_letter(to_alias: str, message: str) -> Any:
-    """Envía una carta a otro agente."""
+def send_letter(to_alias: str, subject: str, body: str) -> Any:
+    """
+    Envía una carta a otro agente con la estructura definida en la API:
+    {
+      "remi": "string",
+      "dest": "string",
+      "asunto": "string",
+      "cuerpo": "string",
+      "id": "string",
+      "fecha": "string"
+    }
+    """
     payload = {
-        "alias": to_alias,
-        "mensaje": message,
+        "remi": ALIAS or "",
+        "dest": to_alias,
+        "asunto": subject,
+        "cuerpo": body,
+        "id": str(uuid4()),
+        "fecha": datetime.utcnow().isoformat(),
     }
     r = requests.post(LETTER_ENDPOINT, json=payload)
     r.raise_for_status()

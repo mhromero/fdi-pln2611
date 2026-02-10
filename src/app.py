@@ -76,7 +76,7 @@ def main() -> None:
     for p in people:
         try:
             print_kv("Enviando carta de estado a", p, color=logs.GREEN)
-            api.send_letter(p, carta_estado)
+            api.send_letter(p, "Estado de recursos", carta_estado)
         except Exception as e:
             print_error(f"al enviar carta a {p}: {e}")
 
