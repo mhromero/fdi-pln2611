@@ -70,13 +70,18 @@ def main() -> None:
     carta_estado = build_status_letter(
         state.alias, state.inventario, state.objetivo, state.needs, state.surplus
     )
+
     print_section("CARTA DE ESTADO A ENVIAR")
     print_carta_estado(carta_estado)
 
     for p in people:
+        p = p["alias"]
+
+        if p == state.alias:
+            continue
         try:
             print_kv("Enviando carta de estado a", p, color=logs.GREEN)
-            api.send_letter(p, "Estado de recursos", carta_estado)
+            api.send_letter(p, "Propuesta", carta_estado)
         except Exception as e:
             print_error(f"al enviar carta a {p}: {e}")
 

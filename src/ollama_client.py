@@ -20,9 +20,10 @@ def ollama(prompt: str, format: Optional[Dict[str, Any]] = None) -> str:
         "prompt": prompt,
         "stream": False,
     }
+    """
     if format is not None:
         payload["format"] = format
-
+    """
     try:
         r = requests.post(
             "http://localhost:11434/api/generate",

@@ -50,6 +50,7 @@ Tu tarea es LEER la oferta y devolver un JSON estructurado con esta forma:
   "pide": {{
     "recurso": cantidad entero
   }},
+
 }}
 
 Donde:
@@ -62,7 +63,7 @@ Donde:
 - "decision" = "rechazada" si no se cumple alguna de las condiciones anteriores
 - "oferta" describe lo que EL OTRO agente nos ofrece.
 - "pide" describe lo que EL OTRO agente quiere que le enviemos.
-
+- No hace falta aceptar la oferta al completo, se puede aceptar parcialmente solo los recursos que nos interesen y que cumplan las condiciones anteriores.
 IMPORTANTE:
 - Devuelve SIEMPRE un JSON VÁLIDO, sin texto adicional.
 
@@ -72,9 +73,12 @@ NECESITAMOS:
 PODEMOS OFRECER:
 {json.dumps(surplus, ensure_ascii=False, indent=2)}
 
-OFERTA A ANALIZAR:
-{json.dumps(oferta, ensure_ascii=False, indent=2)}
+Antes de tomar la decisión, modifica la oferta con los siguientes pasos:
+1) elimina de los recursos que piden los recursos que necesitamos salvo que nos sobre
+2) iguala el numero de recursos al minimo numero de recursos si piden más de lo que nosostros ofrecemos
 
+OFERTA:
+{json.dumps(oferta, ensure_ascii=False, indent=2)}
 
 """
     respuesta = ollama(prompt, format=ANALIZAR_OFERTA_JSON_SCHEMA)
